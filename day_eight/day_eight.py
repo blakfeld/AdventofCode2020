@@ -57,7 +57,8 @@ def execute_program(call_stack):
         context = call_stack[ptr].execute(context)
         ptr += context.get('ptr_jmp', 0)
 
-    return context, ptr == len(call_stack)
+    completed_execution = ptr == len(call_stack)
+    return context, completed_execution
 
 
 def fix_corrupted_inst(call_stack):
