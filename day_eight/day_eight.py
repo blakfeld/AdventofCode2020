@@ -22,11 +22,12 @@ class Instruction:
         context.update({
             'op': str(self.op),
             'arg': self.arg,
-            'ptr_jmp': 0,
+            'ptr_jmp': 1,
         })
+
         if self.op == Operation.ACC:
-            accumulator = context.get('accumulator', 0)
-            context['accumulator'] = accumulator + self.arg
+            context['accumulator'] = context.get('accumulator', 0) + self.arg
+
         elif self.op == Operation.JMP:
             context['ptr_jmp'] = self.arg
 
@@ -53,13 +54,8 @@ def execute_program(call_stack):
     seen = set()
     while ptr not in seen and ptr < len(call_stack):
         seen.add(ptr)
-        inst = call_stack[ptr]
-        context = inst.execute(context)
-
-        if inst.op == Operation.JMP:
-            ptr += context.get('ptr_jmp', 0)
-        else:
-            ptr += 1
+        context = call_stack[ptr].execute(context)
+        ptr += context.get('ptr_jmp', 0)
 
     return context, ptr == len(call_stack)
 
@@ -72,10 +68,14 @@ def fix_corrupted_inst(call_stack):
 
         new_inst = Instruction(op=Operation.NOP, arg=inst.arg)
         call_stack[i] = new_inst
+
         context, completed = execute_program(call_stack)
         if completed:
             return call_stack, context
+
         call_stack[i] = inst
+
+    raise RuntimeError('Unable to correct program!')
 
 
 def main():
